@@ -2,10 +2,14 @@ import express from "express";
 import session from "express-session";
 import pkg from "pg";
 import connectPgSimple from "connect-pg-simple";
+import cors from "cors";
 
 const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// 🔓 Izinkan koneksi dari mana pun (React/Vite, StackBlitz, dll)
+app.use(cors({ origin: "*", methods: ["GET", "POST"], credentials: true }));
 
 // Cek apakah ada DATABASE_URL
 const hasDatabase = !!process.env.DATABASE_URL;
