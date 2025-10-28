@@ -1,16 +1,17 @@
 import express from "express";
 import session from "express-session";
-import { Pool } from "pg";
+import pkg from "pg";
 import connectPgSimple from "connect-pg-simple";
 
+const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// === Database check ===
+// Cek apakah ada DATABASE_URL
 const hasDatabase = !!process.env.DATABASE_URL;
 const PgSession = connectPgSimple(session);
 
-// === Session setup ===
+// Setup session
 app.use(
   session({
     store: hasDatabase
@@ -25,7 +26,7 @@ app.use(
   })
 );
 
-// === Routes ===
+// Route utama
 app.get("/", (req, res) => {
   res.send(`
     <h1>✅ Server Berhasil Jalan!</h1>
@@ -33,6 +34,7 @@ app.get("/", (req, res) => {
   `);
 });
 
+// Jalankan server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
