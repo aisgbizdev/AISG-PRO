@@ -14,7 +14,16 @@ app.use(express.json());
 // === Database Connection ===
 const hasDatabase = !!process.env.DATABASE_URL;
 const PgSession = connectPgSimple(session);
-const pool = hasDatabase ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
+let pool: any = null;
+
+if (hasDatabase) {
+  try {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    console.log("✅ Database pool initialized");
+  } catch (err) {
+    console.error("❌ Failed to initialize DB pool:", err);
+  }
+}
 
 // === Session Setup ===
 app.use(
@@ -41,7 +50,13 @@ app.get("/", (req, res) => {
 
 // === Endpoint Audit (GET) ===
 app.get("/audit", async (req, res) => {
-  if (!pool) return res.status(500).json({ error: "Database tidak tersedia" });
+  if (!pool) {
+    return res.json({
+      status: "warning",
+      message: "Database belum aktif, tapi server siap.",
+      waktu_server: new Date().toISOString(),
+    });
+  }
 
   try {
     const result = await pool.query("SELECT NOW() AS waktu_server");
@@ -51,7 +66,12 @@ app.get("/audit", async (req, res) => {
       waktu_server: result.rows[0].waktu_server,
     });
   } catch (error) {
-    res.status(500).json({ error: "Gagal mengambil data audit" });
+    console.error("❌ Query error:", error);
+    res.json({
+      status: "warning",
+      message: "Database belum diisi atau query gagal, tapi server aktif.",
+      waktu_server: new Date().toISOString(),
+    });
   }
 });
 
