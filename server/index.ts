@@ -8,19 +8,20 @@ const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// 🔓 Izinkan koneksi dari mana pun (React/Vite, StackBlitz, dll)
 app.use(cors({ origin: "*", methods: ["GET", "POST"], credentials: true }));
+app.use(express.json());
 
-// Cek apakah ada DATABASE_URL
+// === Database Connection ===
 const hasDatabase = !!process.env.DATABASE_URL;
 const PgSession = connectPgSimple(session);
+const pool = hasDatabase ? new Pool({ connectionString: process.env.DATABASE_URL }) : null;
 
-// Setup session
+// === Session Setup ===
 app.use(
   session({
     store: hasDatabase
       ? new PgSession({
-          pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+          pool: pool!,
         })
       : undefined,
     secret: process.env.SESSION_SECRET || "fallback_secret",
@@ -30,12 +31,45 @@ app.use(
   })
 );
 
-// Route utama
+// === Route utama ===
 app.get("/", (req, res) => {
   res.send(`
     <h1>✅ Server Berhasil Jalan!</h1>
     <p>Database: ${hasDatabase ? "Connected ✅" : "Not Connected ⚠️"}</p>
   `);
+});
+
+// === Endpoint Audit (GET) ===
+app.get("/audit", async (req, res) => {
+  if (!pool) return res.status(500).json({ error: "Database tidak tersedia" });
+
+  try {
+    const result = await pool.query("SELECT NOW() AS waktu_server");
+    res.json({
+      status: "success",
+      message: "Data audit berhasil diambil",
+      waktu_server: result.rows[0].waktu_server,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Gagal mengambil data audit" });
+  }
+});
+
+// === Endpoint Report (POST) ===
+app.post("/report", async (req, res) => {
+  const { nama, skor, catatan } = req.body;
+
+  if (!nama || !skor) {
+    return res.status(400).json({ error: "Nama dan skor wajib diisi" });
+  }
+
+  console.log("📥 Report diterima:", req.body);
+
+  res.json({
+    status: "success",
+    message: `Report dari ${nama} diterima`,
+    data: { nama, skor, catatan },
+  });
 });
 
 // Jalankan server
