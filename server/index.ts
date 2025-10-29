@@ -1,49 +1,57 @@
 import express from "express";
+import session from "express-session";
+import { Pool } from "pg";
 import dotenv from "dotenv";
-import cors from "cors";
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
 const PORT = process.env.PORT || 10000;
 
-// ✅ Root endpoint
+// ✅ PostgreSQL Pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 
+  "postgresql://sg_db_e74u_user:Xfk27js9LPv1Ud1YkwhxI3kfYkO7Y3iu@dpg-d40gfpuuk2gs73a3af70-a/sg_db_e74u",
+  ssl: { rejectUnauthorized: false },
+});
+
+// 🧠 Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ Tes koneksi database
+pool.connect()
+  .then(() => console.log("🟢 Database pool connected"))
+  .catch((err) => console.error("🔴 Database connection failed:", err));
+
+// 🚀 ROUTE: Tes server
 app.get("/", (req, res) => {
-  res.json({ message: "✅ AiSG Backend Active", time: new Date().toISOString() });
+  res.json({ status: "AiSG Backend Active 🚀" });
 });
 
-// 🧠 DUMMY DATA — AiSG Audit Summary
-const dummyAudits = [
-  { id: 1, name: "Ernest Firman", role: "BM Cirebon", score: 87, status: "✅ Passed" },
-  { id: 2, name: "Lisa Usfie", role: "CBO Jakarta", score: 91, status: "✅ Passed" },
-  { id: 3, name: "Marvy Breemer", role: "RnD PM SGB Mini", score: 84, status: "⚠️ Coaching" },
-  { id: 4, name: "Sumarlin Sidabutar", role: "MDP Trainer", score: 78, status: "⚠️ Re-Audit" },
-  { id: 5, name: "Dessy Syafitrie", role: "Social Media", score: 89, status: "✅ Passed" },
-];
-
-// 🧩 Endpoint: /audit
-app.get("/audit", (req, res) => {
-  res.json(dummyAudits);
+// 🚀 ROUTE: Audit Data
+app.get("/audit", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, name, role, score, status FROM audits ORDER BY id DESC LIMIT 50;");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching audit data:", err);
+    res.status(500).json({ error: "Failed to fetch audits" });
+  }
 });
 
-// 📋 DUMMY LOGS — for Reports Feed
-const dummyLogs = [
-  { time: "22:10", message: "Audit completed for Ernest Firman" },
-  { time: "22:05", message: "New data synced from BD Cirebon" },
-  { time: "21:58", message: "Performance report generated for SEM Manado" },
-  { time: "21:40", message: "New user registered: Cahyo Purnomo" },
-  { time: "21:20", message: "Backend health check OK" },
-];
-
-// 🧩 Endpoint: /logs
-app.get("/logs", (req, res) => {
-  res.json(dummyLogs);
+// 🚀 ROUTE: Logs
+app.get("/logs", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, time, message FROM logs ORDER BY id DESC LIMIT 20;");
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching logs:", err);
+    res.status(500).json({ error: "Failed to fetch logs" });
+  }
 });
 
-// ✅ Run server
+// ✅ Jalankan server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT} and bound to 0.0.0.0`);
 });
