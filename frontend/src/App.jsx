@@ -4,52 +4,50 @@ export default function App() {
   const [status, setStatus] = useState("Checking...");
   const [connected, setConnected] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-
   const [auditData, setAuditData] = useState([]);
   const [logs, setLogs] = useState([]);
   const [stats, setStats] = useState({ total: 0, lastUpdate: "-" });
 
-  // 🔌 Ping backend
+  const BACKEND_URL = "https://aisg-pro-v2.onrender.com";
+
+  // 🌐 Fungsi fetch data backend
+  const fetchData = async () => {
+    try {
+      const ping = await fetch(BACKEND_URL);
+      if (!ping.ok) throw new Error("Backend not responding");
+      setConnected(true);
+      setStatus("✅ Connected");
+
+      const auditRes = await fetch(`${BACKEND_URL}/audit`);
+      const logRes = await fetch(`${BACKEND_URL}/logs`);
+
+      const auditJson = await auditRes.json();
+      const logJson = await logRes.json();
+
+      setAuditData(auditJson);
+      setLogs(logJson.slice(0, 5));
+      setStats({
+        total: auditJson.length,
+        lastUpdate: new Date().toLocaleTimeString(),
+      });
+    } catch (err) {
+      console.warn("❌ Connection failed:", err);
+      setConnected(false);
+      setStatus("❌ Disconnected");
+    }
+  };
+
+  // 🧠 Ping awal saat load
   useEffect(() => {
-    fetch("https://aisg-pro-v2.onrender.com")
-      .then((res) => {
-        if (res.ok) {
-          setStatus("✅ Connected");
-          setConnected(true);
-        } else setStatus("⚠️ Reachable but error");
-      })
-      .catch(() => setStatus("❌ Cannot connect"));
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // 30 detik
+    return () => clearInterval(interval);
   }, []);
 
   // 🌗 Dark Mode toggle
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
-
-  // 📡 Fetch data dari backend
-  useEffect(() => {
-    if (!connected) return;
-
-    // Fetch Audit Summary
-    fetch("https://aisg-pro-v2.onrender.com/audit")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setAuditData(data);
-          setStats({
-            total: data.length,
-            lastUpdate: new Date().toLocaleString(),
-          });
-        }
-      })
-      .catch(() => console.log("Audit data fetch failed"));
-
-    // Fetch Logs (simulasi: /logs endpoint)
-    fetch("https://aisg-pro-v2.onrender.com/logs")
-      .then((res) => res.json())
-      .then((data) => setLogs(data.slice(0, 5)))
-      .catch(() => console.log("Logs fetch failed"));
-  }, [connected]);
 
   return (
     <div className="flex h-screen">
@@ -100,7 +98,7 @@ export default function App() {
               Total Audits: <span className="font-semibold text-blue-400">{stats.total}</span>
             </p>
             <p className="text-xs text-gray-500">
-              Last Updated: {stats.lastUpdate}
+              Last Update: {stats.lastUpdate}
             </p>
           </div>
 
@@ -126,6 +124,7 @@ export default function App() {
             <p className="text-sm text-gray-500">
               {Math.floor(Math.random() * 10) + 1} online | 18 total registered
             </p>
+            <p className="text-xs text-gray-500 mt-1">Auto-refresh every 30s</p>
           </div>
         </section>
       </main>
