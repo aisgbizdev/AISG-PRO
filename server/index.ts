@@ -15,7 +15,10 @@ const PORT = process.env.PORT || 10000;
 const createPool = () => {
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
   });
 
   // Auto reconnect handler
@@ -31,6 +34,11 @@ const createPool = () => {
 };
 
 const pool = createPool();
+
+// Tes koneksi awal
+pool.connect()
+  .then(() => console.log("🟢 Database pool connected"))
+  .catch(err => console.error("🔴 Database connection failed:", err.message));
 
 // ===============================
 // ⚙️ Session Store
@@ -50,8 +58,10 @@ app.use(
 );
 
 // ===============================
-// ✅ Routes
+// ✅ ROUTES
 // ===============================
+
+// Root
 app.get("/", async (req, res) => {
   res.send(`
     <h2>✅ AISG-PRO Backend Connected</h2>
@@ -59,7 +69,7 @@ app.get("/", async (req, res) => {
   `);
 });
 
-// Database Health Check
+// Audit Route
 app.get("/audit", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW() as server_time");
@@ -74,7 +84,7 @@ app.get("/audit", async (req, res) => {
   }
 });
 
-// New: Health Monitor Route
+// Health Route
 app.get("/health", async (req, res) => {
   try {
     const result = await pool.query("SELECT 1");
@@ -85,9 +95,23 @@ app.get("/health", async (req, res) => {
 });
 
 // ===============================
+// 🕐 Keep Alive (Auto Ping Every 5 Minutes)
+// ===============================
+const KEEPALIVE_URL = process.env.KEEPALIVE_URL || "https://aisg-pro-v2.onrender.com/health";
+
+setInterval(async () => {
+  try {
+    const res = await fetch(KEEPALIVE_URL);
+    await res.text();
+    console.log(`🔁 KeepAlive ping success at ${new Date().toISOString()}`);
+  } catch (err) {
+    console.error("⚠️ KeepAlive ping failed:", err.message);
+  }
+}, 5 * 60 * 1000); // 5 menit
+
+// ===============================
 // 🚀 Start Server
 // ===============================
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT} and bound to 0.0.0.0`);
 });
-
