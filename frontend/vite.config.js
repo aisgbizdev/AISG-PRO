@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// ✅ Vite hanya build frontend, abaikan backend module seperti express
+// ✅ Konfigurasi aman untuk build frontend tanpa ganggu server
 export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      external: ['express', 'pg', 'dotenv'], // <== ini penting
+      // Abaikan module backend saat proses build frontend
+      external: ['express', 'pg', 'dotenv'],
       input: 'index.html'
     },
   },
