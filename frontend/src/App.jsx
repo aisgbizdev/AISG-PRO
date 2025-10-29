@@ -1,47 +1,66 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-function App() {
-  const [status, setStatus] = useState("🟡 Checking...");
-  const [dbTime, setDbTime] = useState(null);
-  const backendUrl = "https://aisg-pro-v2.onrender.com";
+export default function App() {
+  const [status, setStatus] = useState("Checking...");
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    fetch(`${backendUrl}/health`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "ok") {
-          setStatus("🟢 Backend Connected");
+    fetch("https://aisg-pro-v2.onrender.com")
+      .then((res) => {
+        if (res.ok) {
+          setStatus("✅ Connected");
+          setConnected(true);
         } else {
-          setStatus("🔴 Error");
+          setStatus("⚠️ Backend reachable but returned error");
         }
       })
-      .catch(() => setStatus("🔴 Offline"));
-
-    fetch(`${backendUrl}/audit`)
-      .then(res => res.text())
-      .then(html => {
-        const match = html.match(/Database Time: ([^<]+)/);
-        if (match) setDbTime(match[1]);
-      })
-      .catch(() => setDbTime("Error fetching DB time"));
+      .catch(() => setStatus("❌ Cannot connect to backend"));
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
-      <h1 className="text-3xl font-bold mb-4">AISG-PRO Dashboard</h1>
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg w-80 text-center">
-        <p className="text-lg mb-2">{status}</p>
-        {dbTime && (
-          <p className="text-sm text-gray-400">
-            DB Time: <span className="font-mono">{dbTime}</span>
-          </p>
-        )}
-      </div>
-      <footer className="mt-6 text-gray-500 text-sm">
-        Powered by <b>AISG-PRO Backend V2</b>
-      </footer>
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-800 text-gray-100 flex flex-col p-4">
+        <h1 className="text-2xl font-bold mb-6">AiSG Center</h1>
+        <nav className="flex flex-col gap-3 text-sm">
+          <a href="#" className="hover:text-blue-400">Dashboard</a>
+          <a href="#" className="hover:text-blue-400">Audit Panel</a>
+          <a href="#" className="hover:text-blue-400">Reports</a>
+          <a href="#" className="hover:text-blue-400">User Logs</a>
+          <a href="#" className="hover:text-blue-400">Settings</a>
+        </nav>
+        <div className="mt-auto text-xs text-gray-400">
+          Powered by Newsmaker.aiSG ©2025
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-900 transition">
+        <header className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">🧠 AiSG Control Center</h2>
+          <span className="text-sm">
+            Backend Status:{" "}
+            <span className={connected ? "text-green-400" : "text-red-400"}>
+              {status}
+            </span>
+          </span>
+        </header>
+
+        <section className="grid grid-cols-3 gap-4">
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Audit Summary</h3>
+            <p className="text-sm text-gray-500">Coming soon...</p>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">Reports</h3>
+            <p className="text-sm text-gray-500">Auto-sync module ready.</p>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <h3 className="font-semibold mb-2">User Activity</h3>
+            <p className="text-sm text-gray-500">Monitoring in progress...</p>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
-
-export default App;
