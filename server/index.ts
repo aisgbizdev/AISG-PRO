@@ -1,4 +1,13 @@
 // 🧩 Coaching data
+  CREATE TABLE IF NOT EXISTS coaching (
+    id SERIAL PRIMARY KEY,
+    name TEXT,
+    date TEXT,
+    topic TEXT,
+    result TEXT,
+    impact TEXT
+  );
+`);
 app.get("/coaching", requireLogin, async (req, res) => {
   const result = await pool.query(
     "SELECT id, name, date, topic, result, impact FROM coaching ORDER BY date DESC LIMIT 50;"
