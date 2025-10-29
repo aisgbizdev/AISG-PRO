@@ -9,17 +9,33 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// PostgreSQL Connection
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+// ===============================
+// 🧠 PostgreSQL Connection (Auto Reconnect)
+// ===============================
+const createPool = () => {
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
 
-// Session Store
+  // Auto reconnect handler
+  pool.on("error", (err) => {
+    console.error("⚠️ Lost PostgreSQL connection. Retrying in 5s...", err.message);
+    setTimeout(() => {
+      console.log("🔁 Reconnecting to PostgreSQL...");
+      globalThis.pool = createPool();
+    }, 5000);
+  });
+
+  return pool;
+};
+
+const pool = createPool();
+
+// ===============================
+// ⚙️ Session Store
+// ===============================
 const PgSession = connectPgSimple(session);
-
 app.use(
   session({
     store: new PgSession({
@@ -33,7 +49,9 @@ app.use(
   })
 );
 
-// Root Route
+// ===============================
+// ✅ Routes
+// ===============================
 app.get("/", async (req, res) => {
   res.send(`
     <h2>✅ AISG-PRO Backend Connected</h2>
@@ -41,7 +59,7 @@ app.get("/", async (req, res) => {
   `);
 });
 
-// Audit Route (Database Check)
+// Database Health Check
 app.get("/audit", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW() as server_time");
@@ -56,6 +74,19 @@ app.get("/audit", async (req, res) => {
   }
 });
 
+// New: Health Monitor Route
+app.get("/health", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT 1");
+    res.json({ status: "ok", db: "connected", time: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+});
+
+// ===============================
+// 🚀 Start Server
+// ===============================
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
