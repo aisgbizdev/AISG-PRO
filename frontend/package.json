@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prebuild": "npm install --force --legacy-peer-deps",
-    "build": "npm run prebuild && npx vite build",
-    "start": "npx vite preview --host 0.0.0.0 --port 10000"
-  },
+  "prebuild": "npm install --force --legacy-peer-deps",
+  "build": "npm run prebuild && npx vite build",
+  "preview": "vite preview --host 0.0.0.0 --port 10000",
+  "start": "npm run preview"
+},
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
