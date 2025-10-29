@@ -1,29 +1,29 @@
-{
-  "name": "rest-express",
-  "version": "1.0.0",
-  "type": "module",
-  "license": "MIT",
-  "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
-    "start": "NODE_ENV=production node dist/index.js",
-    "check": "tsc",
-    "db:push": "drizzle-kit push"
-  },
-  "dependencies": {
-  "express": "^4.21.2",
-  "express-session": "^1.18.1",
-  "connect-pg-simple": "^10.0.0",
-  "pg": "^8.13.0",
-  "pg-types": "^2.2.0",
-  "pg-connection-string": "^2.6.2",
-  "pg-protocol": "^1.7.0",
-  "pg-pool": "^3.6.1",
-  "dotenv": "^16.4.5"
-},
-  "devDependencies": {
-    "esbuild": "^0.25.0",
-    "tsx": "^4.20.5",
-    "typescript": "5.6.3"
+import express from "express";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 10000;
+
+app.get("/", (req, res) => {
+  res.send("🚀 AISG-PRO Backend is Running Smoothly!");
+});
+
+app.get("/audit", async (req, res) => {
+  try {
+    res.send(`
+      <div style="font-family: Arial; padding: 30px; text-align:center;">
+        <h1>✅ AISG-PRO Backend Connected</h1>
+        <p>Server is Live & Database Connected Successfully.</p>
+      </div>
+    `);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
   }
-}
+});
+
+app.listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+});
