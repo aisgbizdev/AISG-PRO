@@ -3,17 +3,14 @@ import React, { useEffect, useState } from "react";
 export default function App() {
   const [status, setStatus] = useState("Checking...");
   const [connected, setConnected] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [auditData, setAuditData] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [stats, setStats] = useState({ total: 0, lastUpdate: "-" });
   const [toast, setToast] = useState(null);
-  const [filter, setFilter] = useState("All");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", role: "", score: "", status: "" });
 
   const BACKEND_URL = "https://aisg-pro-v2.onrender.com";
 
-  // 🌐 Fetch data
+  // 🧠 Fetch data
   const fetchData = async () => {
     try {
       const ping = await fetch(BACKEND_URL);
@@ -21,172 +18,127 @@ export default function App() {
       setConnected(true);
       setStatus("✅ Connected");
 
-      const [auditRes, logRes] = await Promise.all([
-        fetch(`${BACKEND_URL}/audit`),
-        fetch(`${BACKEND_URL}/logs`),
-      ]);
-      const [auditJson, logJson] = await Promise.all([
-        auditRes.json(),
-        logRes.json(),
-      ]);
-
-      // 🔔 Detect changes
-      if (auditData.length && auditJson.length > auditData.length)
-        showToast(`🚨 New audit added! (${auditJson.length - auditData.length})`);
-      if (logs.length && logJson.length > logs.length)
-        showToast("🆕 New log entry detected!");
-
-      setAuditData(auditJson);
-      setLogs(logJson.slice(0, 5));
-      setStats({
-        total: auditJson.length,
-        lastUpdate: new Date().toLocaleTimeString(),
-      });
-    } catch (err) {
+      const res = await fetch(`${BACKEND_URL}/audit`);
+      const json = await res.json();
+      setAuditData(json);
+    } catch {
       setConnected(false);
       setStatus("❌ Disconnected");
     }
   };
 
-  // 🔔 Toast
+  // 🚨 Toast
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
   };
 
-  // 🔁 Refresh every 30s
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
+    const i = setInterval(fetchData, 30000);
+    return () => clearInterval(i);
   }, []);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
-
-  // 🔍 Filter logic
-  const filteredData = auditData
-    .filter((item) => {
-      if (filter === "All") return true;
-      if (filter === "Passed") return item.status.includes("Passed");
-      if (filter === "Coaching") return item.status.includes("Coaching");
-      if (filter === "Re-Audit") return item.status.includes("Re-Audit");
-      return true;
-    })
-    .sort((a, b) =>
-      sortOrder === "desc" ? b.score - a.score : a.score - b.score
-    );
+  // 🧩 Submit new audit
+  const submitAudit = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/audit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast("✅ Audit added successfully!");
+        setForm({ name: "", role: "", score: "", status: "" });
+        setFormOpen(false);
+        fetchData();
+      } else showToast("⚠️ Failed to add audit");
+    } catch {
+      showToast("❌ Error connecting to server");
+    }
+  };
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 text-gray-100 flex flex-col p-5 transition-all duration-500">
-        <h1 className="text-2xl font-bold mb-8">🧠 AiSG Center</h1>
+    <div className="flex flex-col h-screen p-6 bg-gray-900 text-gray-100">
+      <header className="flex justify-between mb-6">
+        <h1 className="text-2xl font-bold">🧠 AiSG Control Center</h1>
+        <span className={connected ? "text-green-400" : "text-red-400"}>
+          {status}
+        </span>
+      </header>
 
-        <nav className="flex flex-col gap-3 text-sm font-medium">
-          <a href="#" className="sidebar-link">📊 Dashboard</a>
-          <a href="#" className="sidebar-link">🧩 Audit Panel</a>
-          <a href="#" className="sidebar-link">📈 Reports</a>
-          <a href="#" className="sidebar-link">👥 User Logs</a>
-          <a href="#" className="sidebar-link">⚙️ Settings</a>
-        </nav>
+      <div className="mb-4 flex justify-between items-center">
+        <h2 className="text-xl font-semibold">📋 Audit Records</h2>
+        <button
+          onClick={() => setFormOpen(true)}
+          className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg text-sm"
+        >
+          ➕ Add Audit
+        </button>
+      </div>
 
-        <div className="mt-auto">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="w-full mt-6 bg-gray-700 hover:bg-gray-600 text-sm py-2 rounded-lg transition-all duration-300"
-          >
-            {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
-          </button>
-          <p className="text-xs text-gray-400 mt-4">
-            Powered by <span className="text-blue-400">Newsmaker AiSG</span> ©2025
-          </p>
-        </div>
-      </aside>
+      <table className="w-full text-sm bg-gray-800 rounded-lg overflow-hidden">
+        <thead className="bg-gray-700 text-gray-300">
+          <tr>
+            <th className="p-2">Name</th>
+            <th className="p-2">Role</th>
+            <th className="p-2">Score</th>
+            <th className="p-2">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {auditData.map((a) => (
+            <tr key={a.id} className="border-b border-gray-700">
+              <td className="p-2">{a.name}</td>
+              <td className="p-2 text-gray-400">{a.role}</td>
+              <td className="p-2">{a.score}</td>
+              <td className="p-2">{a.status}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 bg-gray-50 dark:bg-gray-900 transition-all duration-500 ease-in-out overflow-y-auto">
-        <header className="flex justify-between items-center mb-8">
-          <h2 className="text-xl font-semibold tracking-wide">
-            AiSG Control Center
-          </h2>
-          <span className="text-sm">
-            Backend Status:{" "}
-            <span className={connected ? "text-green-400" : "text-red-400"}>
-              {status}
-            </span>
-          </span>
-        </header>
+      {/* 📥 Modal Form */}
+      {formOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-gray-800 p-6 rounded-lg w-80">
+            <h3 className="text-lg font-semibold mb-4">➕ Add Audit</h3>
 
-        {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="px-3 py-2 bg-gray-200 dark:bg-gray-800 rounded-lg text-sm"
-          >
-            <option value="All">All Status</option>
-            <option value="Passed">✅ Passed</option>
-            <option value="Coaching">⚠️ Coaching</option>
-            <option value="Re-Audit">❌ Re-Audit</option>
-          </select>
+            {["name", "role", "score", "status"].map((f) => (
+              <input
+                key={f}
+                placeholder={f.toUpperCase()}
+                value={form[f]}
+                onChange={(e) => setForm({ ...form, [f]: e.target.value })}
+                className="w-full p-2 mb-3 bg-gray-700 rounded-lg text-sm"
+              />
+            ))}
 
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="px-3 py-2 bg-gray-200 dark:bg-gray-800 rounded-lg text-sm"
-          >
-            <option value="desc">Score: High → Low</option>
-            <option value="asc">Score: Low → High</option>
-          </select>
-
-          <span className="text-xs text-gray-400">
-            Showing {filteredData.length} of {auditData.length} records
-          </span>
-        </div>
-
-        {/* Audit Table */}
-        <div className="card overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-700 text-left">
-                <th className="p-2">Name</th>
-                <th className="p-2">Role</th>
-                <th className="p-2">Score</th>
-                <th className="p-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((a) => (
-                <tr key={a.id} className="border-b border-gray-800">
-                  <td className="p-2">{a.name}</td>
-                  <td className="p-2 text-gray-400">{a.role}</td>
-                  <td className="p-2 font-semibold">{a.score}</td>
-                  <td
-                    className={`p-2 ${
-                      a.status.includes("Passed")
-                        ? "text-green-400"
-                        : a.status.includes("Coaching")
-                        ? "text-yellow-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {a.status}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Toast */}
-        {toast && (
-          <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg text-sm animate-fade-in-up">
-            {toast}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setFormOpen(false)}
+                className="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded-lg text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitAudit}
+                className="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded-lg text-sm"
+              >
+                Submit
+              </button>
+            </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
+
+      {/* 🔔 Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg text-sm animate-fade-in-up">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
