@@ -1,7 +1,7 @@
 import express from "express";
 import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
 import pg from "pg";
+import connectPgSimple from "connect-pg-simple";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -9,47 +9,50 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-const { Pool } = pg;
-const PgSession = connectPgSimple(session);
-
-// koneksi database
-const pool = new Pool({
+// PostgreSQL Connection
+const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
+
+// Session Store
+const PgSession = connectPgSimple(session);
 
 app.use(
   session({
-    store: new PgSession({ pool }),
-    secret: process.env.SESSION_SECRET || "aisg-secret",
+    store: new PgSession({
+      pool,
+      createTableIfMissing: true
+    }),
+    secret: process.env.SESSION_SECRET || "sg_secret_2025",
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 },
+    cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 }
   })
 );
 
-// route utama
-app.get("/", (req, res) => {
+// Root Route
+app.get("/", async (req, res) => {
   res.send(`
     <h2>✅ AISG-PRO Backend Connected</h2>
     <p>Server is Live & Database Connected Successfully.</p>
   `);
 });
 
-// route audit (endpoint untuk frontend)
+// Audit Route (Database Check)
 app.get("/audit", async (req, res) => {
   try {
-    const client = await pool.connect();
-    await client.query("SELECT NOW()");
-    client.release();
-
+    const result = await pool.query("SELECT NOW() as server_time");
     res.send(`
       <h2>✅ AISG-PRO Backend Connected</h2>
       <p>Server is Live & Database Connected Successfully.</p>
+      <p><b>Database Time:</b> ${result.rows[0].server_time}</p>
     `);
   } catch (err) {
-    console.error("Database connection error:", err);
-    res.status(500).send("Internal Server Error: Database Connection Failed");
+    console.error("DB Error:", err.message);
+    res.status(500).send("Internal Server Error: " + err.message);
   }
 });
 
