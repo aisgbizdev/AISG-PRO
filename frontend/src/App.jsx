@@ -7,10 +7,11 @@ export default function App() {
   const [auditData, setAuditData] = useState([]);
   const [logs, setLogs] = useState([]);
   const [stats, setStats] = useState({ total: 0, lastUpdate: "-" });
+  const [toast, setToast] = useState(null); // 🎯 New toast state
 
   const BACKEND_URL = "https://aisg-pro-v2.onrender.com";
 
-  // 🌐 Fungsi fetch data backend
+  // 🌐 Fetch data dari backend
   const fetchData = async () => {
     try {
       const ping = await fetch(BACKEND_URL);
@@ -18,11 +19,25 @@ export default function App() {
       setConnected(true);
       setStatus("✅ Connected");
 
-      const auditRes = await fetch(`${BACKEND_URL}/audit`);
-      const logRes = await fetch(`${BACKEND_URL}/logs`);
+      const [auditRes, logRes] = await Promise.all([
+        fetch(`${BACKEND_URL}/audit`),
+        fetch(`${BACKEND_URL}/logs`),
+      ]);
 
-      const auditJson = await auditRes.json();
-      const logJson = await logRes.json();
+      const [auditJson, logJson] = await Promise.all([
+        auditRes.json(),
+        logRes.json(),
+      ]);
+
+      // 🚨 Deteksi perubahan data audit atau log
+      if (auditData.length && auditJson.length > auditData.length) {
+        showToast(
+          `🚨 New audit record detected! (${auditJson.length - auditData.length} added)`
+        );
+      }
+      if (logs.length && logJson.length > logs.length) {
+        showToast("🆕 New log entry received!");
+      }
 
       setAuditData(auditJson);
       setLogs(logJson.slice(0, 5));
@@ -37,14 +52,20 @@ export default function App() {
     }
   };
 
-  // 🧠 Ping awal saat load
+  // 🚨 Toast display function
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Auto refresh setiap 30 detik
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000); // 30 detik
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // 🌗 Dark Mode toggle
+  // Dark mode toggle
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
@@ -95,7 +116,8 @@ export default function App() {
           <div className="card">
             <h3 className="font-semibold mb-2">📊 Audit Summary</h3>
             <p className="text-sm mb-1 text-gray-400">
-              Total Audits: <span className="font-semibold text-blue-400">{stats.total}</span>
+              Total Audits:{" "}
+              <span className="font-semibold text-blue-400">{stats.total}</span>
             </p>
             <p className="text-xs text-gray-500">
               Last Update: {stats.lastUpdate}
@@ -127,6 +149,13 @@ export default function App() {
             <p className="text-xs text-gray-500 mt-1">Auto-refresh every 30s</p>
           </div>
         </section>
+
+        {/* 🔔 Toast Notification */}
+        {toast && (
+          <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg text-sm animate-fade-in-up">
+            {toast}
+          </div>
+        )}
       </main>
     </div>
   );
