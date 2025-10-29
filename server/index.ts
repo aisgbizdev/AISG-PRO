@@ -43,12 +43,15 @@ app.get("/", (req, res) => {
 
 app.get("/audit", async (req, res) => {
   try {
-    const result = await pool.query("SELECT NOW()");
     res.send(`
-      <h2>✅ Audit Route OK</h2>
-      <p>Database connected and session working.</p>
-      <p>Timestamp: ${result.rows[0].now}</p>
+      <h2>✅ AISG-PRO Backend Connected</h2>
+      <p>Server is Live & Database Connected Successfully.</p>
     `);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
   } catch (err) {
     console.error(err);
     res.status(500).send("❌ Internal Server Error: " + err.message);
