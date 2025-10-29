@@ -4,14 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "NODE_ENV=production npm install vite && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
+    "react-dom": "^18.3.1",
     "vite": "^5.3.1",
     "@vitejs/plugin-react": "^4.2.1",
     "tailwindcss": "^3.4.4",
