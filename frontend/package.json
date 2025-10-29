@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "NODE_ENV=production npm install vite && vite build",
-    "preview": "vite preview"
+    "build": "vite build",
+    "start": "vite preview --host 0.0.0.0 --port 10000"
   },
   "dependencies": {
     "react": "^18.3.1",
