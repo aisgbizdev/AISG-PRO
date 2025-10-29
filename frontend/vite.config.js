@@ -6,8 +6,10 @@ import path from 'node:path'
 
 export default defineConfig({
   plugins: [react()],
-  root: './',
-  publicDir: 'public',
+  build: {
+    rollupOptions: {
+      external: ['express'], // ⬅️ tambahkan ini
+    },
 
   // Jalankan hanya SPA (no SSR)
   build: {
