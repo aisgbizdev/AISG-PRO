@@ -17,6 +17,7 @@
   "connect-pg-simple": "^10.0.0",
   "memorystore": "^1.6.7",
   "pg-types": "^2.2.0",
+    "pg-connection-string": "^2.6.2",
   "cors": "^2.8.5"
 },
   "devDependencies": {
