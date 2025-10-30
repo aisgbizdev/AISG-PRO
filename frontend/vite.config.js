@@ -1,14 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// ✅ FIX RENDER DEPLOY ERROR
-// Abaikan semua modul backend saat build frontend
+// ✅ FINAL FIX untuk Render: Abaikan file backend saat build
 export default defineConfig({
   plugins: [react()],
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
-      external: ['express', 'pg', 'dotenv', 'pg-protocol', 'pg-pool', 'connect-pg-simple'],
-      input: 'index.html',
+      external: [
+        'express',
+        'pg',
+        'dotenv',
+        'pg-protocol',
+        'pg-pool',
+        'connect-pg-simple'
+      ],
+      input: 'index.html'
     },
   },
   server: {
