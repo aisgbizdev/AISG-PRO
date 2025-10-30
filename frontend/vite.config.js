@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// ✅ Konfigurasi build frontend tanpa ganggu backend
+// ✅ FIX RENDER DEPLOY ERROR
+// Abaikan semua modul backend saat build frontend
 export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
-      // 🚫 Abaikan modul server saat build
-      external: ['express', 'pg', 'dotenv'],
+      external: ['express', 'pg', 'dotenv', 'pg-protocol', 'pg-pool', 'connect-pg-simple'],
       input: 'index.html',
     },
   },
