@@ -9,6 +9,7 @@ const { Pool } = pkg;
 const app = express();
 const port = process.env.PORT || 10000;
 
+// ✅ Izinkan akses dari frontend
 app.use(
   cors({
     origin: [
@@ -35,6 +36,6 @@ app.get("/api/performance", async (req, res) => {
   }
 });
 
-app.listen(port, "0.0.0.0", () =>
-  console.log(`✅ AISG-PRO API running on port ${port}`)
-);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`✅ AISG-PRO API running on port ${port}`);
+});
