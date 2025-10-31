@@ -1,8 +1,7 @@
 {
   "name": "aisg-pro",
   "version": "1.0.0",
-  "type": "module",
-  "scripts": {
+    "scripts": {
     "dev": "ts-node server/index.ts",
     "build": "tsc",
     "start": "node dist/server/index.js"
