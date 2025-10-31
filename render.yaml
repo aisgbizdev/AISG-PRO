@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: AISG-PRO
+    env: node
+    buildCommand: npm run build
+    startCommand: npm run start
