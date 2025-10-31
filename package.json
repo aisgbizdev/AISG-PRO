@@ -2,7 +2,6 @@
   "name": "aisg-pro",
   "version": "1.0.0",
   "type": "module",
-  "main": "dist/server/index.js",
   "scripts": {
     "dev": "ts-node server/index.ts",
     "build": "tsc",
@@ -16,6 +15,7 @@
   },
   "devDependencies": {
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "@types/node": "^20.5.1"
   }
 }
