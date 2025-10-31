@@ -9,7 +9,6 @@ const { Pool } = pkg;
 const app = express();
 const port = process.env.PORT || 10000;
 
-// ✅ Izinkan koneksi dari frontend Render
 app.use(
   cors({
     origin: [
@@ -17,13 +16,13 @@ app.use(
       "https://aisg-pro-79ru.onrender.com"
     ],
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type"]
   })
 );
 
 const pool = new Pool({
   connectionString: process.env.VITE_DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false }
 });
 
 app.get("/api/performance", async (req, res) => {
@@ -36,6 +35,6 @@ app.get("/api/performance", async (req, res) => {
   }
 });
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`✅ AISG-PRO API running on port ${port}`);
-});
+app.listen(port, "0.0.0.0", () =>
+  console.log(`✅ AISG-PRO API running on port ${port}`)
+);
