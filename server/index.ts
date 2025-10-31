@@ -1,45 +1,41 @@
 import express from "express";
+import cors from "cors";
 import pkg from "pg";
-const { Pool } = pkg;
 import dotenv from "dotenv";
 
 dotenv.config();
 
+const { Pool } = pkg;
 const app = express();
 const port = process.env.PORT || 10000;
 
+// ✅ Izinkan koneksi dari frontend Render
+app.use(
+  cors({
+    origin: [
+      "https://aisg-control-center.onrender.com",
+      "https://aisg-pro-79ru.onrender.com"
+    ],
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.VITE_DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-(async () => {
+app.get("/api/performance", async (req, res) => {
   try {
-    await pool.connect();
-    console.log("🟢 Database connected successfully");
-
-    // 🧩 Auto-create table if not exists
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS coaching (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        date TEXT,
-        topic TEXT,
-        result TEXT,
-        impact TEXT
-      );
-    `;
-    await pool.query(createTableQuery);
-    console.log("✅ Table 'coaching' checked/created successfully");
+    const result = await pool.query("SELECT * FROM performance ORDER BY month ASC");
+    res.json(result.rows);
   } catch (err) {
-    console.error("🔴 Database connection failed:", err);
+    console.error(err);
+    res.status(500).json({ error: "Database query failed" });
   }
-})();
-
-app.get("/", (req, res) => {
-  res.send("✅ AISG-PRO Backend Connected");
 });
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`✅ Server running on port ${port}`);
+  console.log(`✅ AISG-PRO API running on port ${port}`);
 });
