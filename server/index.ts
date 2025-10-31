@@ -7,9 +7,8 @@ dotenv.config();
 
 const { Pool } = pkg;
 const app = express();
-const port = process.env.PORT || 10000;
+const port = Number(process.env.PORT) || 10000;
 
-// ✅ Izinkan akses dari frontend
 app.use(
   cors({
     origin: [
@@ -26,16 +25,20 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+app.get("/", (req, res) => {
+  res.send("AISG-PRO Backend is live 🚀");
+});
+
 app.get("/api/performance", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM performance ORDER BY month ASC");
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("Database error:", err);
     res.status(500).json({ error: "Database query failed" });
   }
 });
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`✅ AISG-PRO API running on port ${port}`);
-});
+app.listen(port, "0.0.0.0", () =>
+  console.log(`✅ AISG-PRO API running on port ${port}`)
+);
