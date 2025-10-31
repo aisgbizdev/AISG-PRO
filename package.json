@@ -1,20 +1,21 @@
 {
-  "name": "aisg-control-center",
+  "name": "aisg-pro",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
+  "main": "dist/server/index.js",
   "scripts": {
     "dev": "ts-node server/index.ts",
     "build": "tsc",
     "start": "node dist/server/index.js"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "vite": "^5.3.1",
-    "@vitejs/plugin-react": "^4.2.1",
-    "tailwindcss": "^3.4.4",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }
