@@ -42,3 +42,7 @@ app.get("/api/performance", async (req, res) => {
 app.listen(port, "0.0.0.0", () =>
   console.log(`✅ AISG-PRO API running on port ${port}`)
 );
+// Simple health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", service: "AISG-PRO", time: new Date().toISOString() });
+});
