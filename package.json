@@ -1,23 +1,37 @@
 {
   "name": "aisg-pro",
   "version": "1.0.0",
-    "scripts": {
-    "dev": "ts-node server/index.ts",
-    "build": "tsc",
-    "start": "node dist/server/index.js"
+  "description": "AISG-PRO Web API – Audit Intelligence System for SG",
+  "main": "dist/server/index.js",
+  "scripts": {
+    "start": "node dist/server/index.js",
+    "dev": "ts-node src/server/index.ts",
+    "build": "tsc"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
-    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "pg": "^8.11.5"
+    "cors": "^2.8.5"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "@types/node": "^20.5.1",
+    "@types/node": "^22.0.0",
     "@types/express": "^4.17.21",
-    "@types/cors": "^2.8.17",
-    "@types/pg": "^8.10.3"
-  }
+    "@types/cors": "^2.8.17"
+  },
+  "keywords": [
+    "aisg",
+    "audit",
+    "sg",
+    "business-intelligence",
+    "typescript",
+    "render"
+  ],
+  "author": "Team PV – Broto & Mas DR",
+  "license": "MIT"
 }
